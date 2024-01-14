@@ -8,7 +8,10 @@ Implements Runnable interface to use "threading" - let the game do two things at
 
 */
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionAdapter;
 import javax.swing.*;
 
 public class GamePanel extends JPanel implements Runnable{
@@ -16,15 +19,44 @@ public class GamePanel extends JPanel implements Runnable{
   //dimensions of window
   public static final int GAME_WIDTH = 1024;
   public static final int GAME_HEIGHT = 600;
+  public static int startX = 0, MouseY = 0, MouseX = 0;
+
+  public int lives = 3;
 
   public Thread gameThread;
   public Image image;
   public Graphics graphics;
-  public Vegetables veg;
-
+  public Vegetables veg1, veg2, veg3, veg4 ,veg5;
+  public  boolean veg1Intersects, veg2Intersects, veg3Intersects ;
 
   public GamePanel(){
-    veg = new Vegetables(GAME_WIDTH/2, GAME_HEIGHT/2); //create a player controlled ball, set start location to middle of screen
+
+
+    veg1 = new Vegetables(GAME_WIDTH/2, GAME_HEIGHT/2);
+    veg2 = new Vegetables(GAME_WIDTH/2, GAME_HEIGHT/2);
+    veg3 = new Vegetables(GAME_WIDTH/2, GAME_HEIGHT/2);
+    veg4 = new Vegetables(GAME_WIDTH/2, GAME_HEIGHT/2);
+    veg5 = new Vegetables(GAME_WIDTH/2, GAME_HEIGHT/2);
+    Vegetables[] vegetables = {veg1, veg2, veg3, veg4, veg5};
+
+
+
+    addMouseMotionListener(new MouseMotionAdapter() {
+      public void mouseMoved(MouseEvent e) {
+        Point mousePoint = e.getPoint();
+
+        for (Vegetables vegObject : vegetables) {
+          if (vegObject.contains(mousePoint)) {
+            vegObject.mouseIntersects = true;
+          } else {
+            vegObject.mouseIntersects = false;
+          }
+        }
+      }
+    });
+
+
+
     this.setFocusable(true); //make everything in this class appear on the screen
 
     //add the MousePressed method from the MouseAdapter - by doing this we can listen for mouse input. We do this differently from the KeyListener because MouseAdapter has SEVEN mandatory methods - we only need one of them, and we don't want to make 6 empty methods
@@ -35,39 +67,17 @@ public class GamePanel extends JPanel implements Runnable{
     gameThread.start();
   }
 
-  //paint is a method in java.awt library that we are overriding. It is a special method - it is called automatically in the background in order to update what appears in the window. You NEVER call paint() yourself
+
+
+    //paint is a method in java.awt library that we are overriding. It is a special method - it is called automatically in the background in order to update what appears in the window. You NEVER call paint() yourself
   public void paint(Graphics g){
-    //we are using "double buffering here" - if we draw images directly onto the screen, it takes time and the human eye can actually notice flashes of lag as each pixel on the screen is drawn one at a time. Instead, we are going to draw images OFF the screen, then simply move the image on screen as needed. 
+    //we are using "double buffering here" - if we draw images directly onto the screen, it takes time and the human eye can actually notice flashes of lag as each pixel on the screen is drawn one at a time. Instead, we are going to draw images OFF the screen, then simply move the image on screen as needed.
     image = createImage(GAME_WIDTH, GAME_HEIGHT); //draw off screen
     graphics = image.getGraphics();
-    draw(graphics);//update the positions of everything on the screen 
+    draw(graphics);//update the positions of everything on the screen
     g.drawImage(image, 0, 0, this); //move the image on the screen
   }
 
-  public void vegGravity()
-  {
-    veg.yVelocity = veg.yVelocity +1;
-    if(veg.yVelocity > 2)
-    {
-      veg.yVelocity = 2;
-    }
-
-    veg.y = veg.y - veg.yVelocity;
-    veg.move();
-  }
-
-  public void vegInverseGravity()
-  {
-    veg.yVelocity = veg.yVelocity - 1;
-    if(veg.yVelocity > -2)
-    {
-      veg.yVelocity = -2;
-    }
-
-    veg.y = veg.y + veg.yVelocity;
-
-    veg.move();
-  }
 
   public void sleep(int x)
   {
@@ -80,10 +90,9 @@ public class GamePanel extends JPanel implements Runnable{
 
   //call the draw methods in each class to update positions as things move
   public void draw(Graphics g){
-    Graphics2D g2d = (Graphics2D) g;
-    g2d.setColor(Color.white);
-    //g2d.rotate(Math.toRadians(45));
-    veg.draw(g);
+    g.setColor(Color.white);
+    veg1.draw(g);
+
   }
 
   //call the move methods in other classes to update positions
@@ -92,25 +101,139 @@ public class GamePanel extends JPanel implements Runnable{
 
   //handles all collision detection and responds accordingly
   public void checkCollision(){
-    
+
+
     //force player to remain on screen
-    if(veg.y<= 0){
-      veg.y = 0;
+    if(veg1.y<= 0){
+      veg1.y = 0;
+      lives = lives -1;
+
     }
-    if(veg.y >= GAME_HEIGHT - PlayerBall.BALL_DIAMETER){
-      veg.y = GAME_HEIGHT-PlayerBall.BALL_DIAMETER;
+    if(veg1.y >= GAME_HEIGHT - PlayerBall.BALL_DIAMETER){
+      lives = lives -1;
+      veg1.y = GAME_HEIGHT-PlayerBall.BALL_DIAMETER;
     }
-    if(veg.x <= 0){
-      veg.x = 0;
+    if(veg1.x <= 0){
+      veg1.x = 0;
+      lives = lives -1;
+
     }
-    if(veg.x + PlayerBall.BALL_DIAMETER >= GAME_WIDTH){
-      veg.x = GAME_WIDTH-PlayerBall.BALL_DIAMETER;
+    if(veg1.x + PlayerBall.BALL_DIAMETER >= GAME_WIDTH){
+      veg1.x = GAME_WIDTH-PlayerBall.BALL_DIAMETER;
+      lives = lives -1;
+
     }
   }
 
+
+  public double[] getQuadratic(int spawnSeed){
+  double[] quadraticFactor = {0, 0, 0, 0, 0};
+  //A H M
+
+
+  switch (spawnSeed){
+    case 1:
+      quadraticFactor[0] = 0.01;
+      quadraticFactor[1] = 500;
+      quadraticFactor[2] = 0;
+      quadraticFactor[3] = 744;
+      quadraticFactor[4] = 253;
+      return quadraticFactor;
+    case 2:
+      quadraticFactor[0] = 0.01;
+      quadraticFactor[1] = 750;
+      quadraticFactor[2] = 0;
+      quadraticFactor[3] = 994;
+      quadraticFactor[4] = 505;
+      return quadraticFactor;
+    case 3:
+      quadraticFactor[0] = 0.01;
+      quadraticFactor[1] = 260;
+      quadraticFactor[2] = 260;
+      quadraticFactor[3] = 444;
+      quadraticFactor[4] = 75;
+      return quadraticFactor;
+    case 4:
+      quadraticFactor[0] = 0.01;
+      quadraticFactor[1] = 650;
+      quadraticFactor[2] = 350;
+      quadraticFactor[3] = 772;
+      quadraticFactor[4] = 744;
+      return quadraticFactor;
+    case 5:
+      quadraticFactor[0] = 0.01;
+      quadraticFactor[1] = 360;
+      quadraticFactor[2] = 140;
+      quadraticFactor[3] = 574;
+      quadraticFactor[4] = 491;
+      return quadraticFactor;
+    case 6:
+      quadraticFactor[0] = 0.01;
+      quadraticFactor[1] = 530;
+      quadraticFactor[2] = 460;
+      quadraticFactor[3] = 648;
+      quadraticFactor[4] = 411;
+      return quadraticFactor;
+  }
+
+
+    return null;
+  }
+
+  public void removeVeg(Vegetables cutVeg)
+  {
+    hasBeenCut = true;
+    System.out.println("cut!");
+  }
+  public double getA(int spawnSeed)
+  {
+    double[] tempArray = getQuadratic(spawnSeed);
+    return tempArray[0];
+  }
+
+  public double getH(int spawnSeed)
+  {
+    double[] tempArray = getQuadratic(spawnSeed);
+    return tempArray[1];
+  }
+
+  public double getM(int spawnSeed)
+  {
+    double[] tempArray = getQuadratic(spawnSeed);
+    return tempArray[2];
+  }
+
+
+  public void setStartX(int spawnSeed)
+  {
+    double[] tempArray = getQuadratic(spawnSeed);
+    startX = (int) tempArray[4];
+    veg1.updateStep();
+  }
+
+  public int getEndX(int spawnSeed)
+  {
+    double[] tempArray = getQuadratic(spawnSeed);
+    setStartX(spawnSeed);
+    return (int) tempArray[3];
+  }
+  boolean hasBeenCut = false;
+
+  public void spawnVeg1(int spawnSeed)
+  {
+    if(veg1.mouseIntersects)
+    {
+      removeVeg(veg1);
+    } else if (!hasBeenCut)
+    {
+      veg1.move(getEndX(spawnSeed), getA(spawnSeed), getH(spawnSeed), getM(spawnSeed));
+    }
+  }
+
+
   //run() method is what makes the game continue running without end. It calls other methods to move objects,  check for collision, and update the screen
   public void run(){
-    //the CPU runs our game code too quickly - we need to slow it down! The following lines of code "force" the computer to get stuck in a loop for short intervals between calling other methods to update the screen. 
+    //the CPU runs our game code too quickly - we need to slow it down! The following lines of code "force" the computer to get stuck in a loop for short intervals between calling other methods to update the screen.
     long lastTime = System.nanoTime();
     double amountOfTicks = 60;
     double ns = 1000000000/amountOfTicks;
@@ -124,10 +247,9 @@ public class GamePanel extends JPanel implements Runnable{
 
       //only move objects around and update screen if enough time has passed
       if(delta >= 1){
-        vegInverseGravity();
-        sleep(20);
-        vegGravity();
-        System.out.println(veg.yVelocity);
+        //System.out.println("X: " + MouseX + "Y: " + MouseY);
+        spawnVeg1(1);
+
         checkCollision();
         repaint();
         delta--;
