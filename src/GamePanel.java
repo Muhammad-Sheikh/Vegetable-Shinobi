@@ -10,8 +10,6 @@ Implements Runnable interface to use "threading" - let the game do two things at
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionAdapter;
 import javax.swing.*;
 
 public class GamePanel extends JPanel implements Runnable{
@@ -27,7 +25,11 @@ public class GamePanel extends JPanel implements Runnable{
   public Image image;
   public Graphics graphics;
   public Vegetables veg1, veg2, veg3, veg4 ,veg5;
-  public  boolean veg1Intersects, veg2Intersects, veg3Intersects ;
+  Point mousePoint;
+
+  Vegetables[] vegetableList = {veg1, veg2};
+
+
 
   public GamePanel(){
 
@@ -41,15 +43,17 @@ public class GamePanel extends JPanel implements Runnable{
 
 
 
-    addMouseMotionListener(new MouseMotionAdapter() {
-      public void mouseMoved(MouseEvent e) {
-        Point mousePoint = e.getPoint();
-
-        for (Vegetables vegObject : vegetables) {
-          if (vegObject.contains(mousePoint)) {
-            vegObject.mouseIntersects = true;
-          } else {
-            vegObject.mouseIntersects = false;
+    addMouseListener(new MouseAdapter() {
+      public void mousePressed(MouseEvent e) {
+        mousePoint = e.getPoint();
+        for(Vegetables tempVeg : vegetables)
+        {
+          if(tempVeg.contains(mousePoint))
+          {
+            tempVeg.mouseIntersects = true;
+          } else
+          {
+            tempVeg.mouseIntersects = false;
           }
         }
       }
@@ -92,6 +96,7 @@ public class GamePanel extends JPanel implements Runnable{
   public void draw(Graphics g){
     g.setColor(Color.white);
     veg1.draw(g);
+    veg2.draw(g);
 
   }
 
@@ -101,28 +106,30 @@ public class GamePanel extends JPanel implements Runnable{
 
   //handles all collision detection and responds accordingly
   public void checkCollision(){
-
-
-    //force player to remain on screen
-    if(veg1.y<= 0){
-      veg1.y = 0;
+  Vegetables[] vegList = {veg1, veg2};
+  for(Vegetables tempVeg : vegList)
+  {
+    if(tempVeg.y<= 0){
+      tempVeg.y = 0;
       lives = lives -1;
 
     }
-    if(veg1.y >= GAME_HEIGHT - PlayerBall.BALL_DIAMETER){
+    if(tempVeg.y >= GAME_HEIGHT - tempVeg.VEG_DIAMETER){
       lives = lives -1;
-      veg1.y = GAME_HEIGHT-PlayerBall.BALL_DIAMETER;
+      tempVeg.y = GAME_HEIGHT-tempVeg.VEG_DIAMETER;
     }
-    if(veg1.x <= 0){
-      veg1.x = 0;
-      lives = lives -1;
-
-    }
-    if(veg1.x + PlayerBall.BALL_DIAMETER >= GAME_WIDTH){
-      veg1.x = GAME_WIDTH-PlayerBall.BALL_DIAMETER;
+    if(tempVeg.x <= 0){
+      tempVeg.x = 0;
       lives = lives -1;
 
     }
+    if(tempVeg.x + tempVeg.VEG_DIAMETER >= GAME_WIDTH){
+      tempVeg.x = GAME_WIDTH-tempVeg.VEG_DIAMETER;
+      lives = lives -1;
+
+    }
+  }
+
   }
 
 
@@ -204,31 +211,33 @@ public class GamePanel extends JPanel implements Runnable{
   }
 
 
-  public void setStartX(int spawnSeed)
+  public void setStartX(int spawnSeed, Vegetables veg)
   {
     double[] tempArray = getQuadratic(spawnSeed);
     startX = (int) tempArray[4];
-    veg1.updateStep();
+    veg.updateStep();
   }
 
   public int getEndX(int spawnSeed)
   {
     double[] tempArray = getQuadratic(spawnSeed);
-    setStartX(spawnSeed);
     return (int) tempArray[3];
   }
   boolean hasBeenCut = false;
 
-  public void spawnVeg1(int spawnSeed)
+  public void spawnVeg(int spawnSeed, Vegetables veg)
   {
-    if(veg1.mouseIntersects)
+    if(veg.mouseIntersects)
     {
-      removeVeg(veg1);
+      removeVeg(veg);
     } else if (!hasBeenCut)
     {
-      veg1.move(getEndX(spawnSeed), getA(spawnSeed), getH(spawnSeed), getM(spawnSeed));
+      setStartX(spawnSeed, veg);
+      veg.move(getEndX(spawnSeed), getA(spawnSeed), getH(spawnSeed), getM(spawnSeed));
     }
   }
+
+
 
 
   //run() method is what makes the game continue running without end. It calls other methods to move objects,  check for collision, and update the screen
@@ -248,8 +257,8 @@ public class GamePanel extends JPanel implements Runnable{
       //only move objects around and update screen if enough time has passed
       if(delta >= 1){
         //System.out.println("X: " + MouseX + "Y: " + MouseY);
-        spawnVeg1(1);
-
+        spawnVeg(1, veg1);
+        spawnVeg(3, veg2);
         checkCollision();
         repaint();
         delta--;
