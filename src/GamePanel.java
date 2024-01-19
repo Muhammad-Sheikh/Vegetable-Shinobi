@@ -10,7 +10,11 @@ Implements Runnable interface to use "threading" - let the game do two things at
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.*;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
 public class GamePanel extends JPanel implements Runnable{
@@ -27,11 +31,13 @@ public class GamePanel extends JPanel implements Runnable{
   public Vegetables veg1, veg2, veg3, veg4 ,veg5;
   public Bomb bomb1;
   Point mousePoint;
+  BufferedImage test = new BufferedImage(20, 20,2);
 
 
 
 
-  public GamePanel(){
+
+  public GamePanel()  {
     bomb1 = new Bomb(GAME_WIDTH/2, GAME_HEIGHT/2);
     veg1 = new Vegetables(GAME_WIDTH/2, GAME_HEIGHT/2);
     veg2 = new Vegetables(GAME_WIDTH/2, GAME_HEIGHT/2);
@@ -40,6 +46,13 @@ public class GamePanel extends JPanel implements Runnable{
     veg5 = new Vegetables(GAME_WIDTH/2, GAME_HEIGHT/2);
     Vegetables[] vegetables = {veg1, veg2, veg3, veg4, veg5};
 
+    try
+    {
+      test = ImageIO.read(getClass().getResourceAsStream("/2.png"));
+    }catch (IOException e)
+    {
+      System.out.println("lol");
+    }
 
 
     addMouseListener(new MouseAdapter() {
@@ -88,28 +101,20 @@ public class GamePanel extends JPanel implements Runnable{
 
     //paint is a method in java.awt library that we are overriding. It is a special method - it is called automatically in the background in order to update what appears in the window. You NEVER call paint() yourself
   public void paint(Graphics g){
-    loadImage("//2.png");
-    super.paintComponent(g);
+
+    Graphics2D g2d = (Graphics2D)g;
+
     //we are using "double buffering here" - if we draw images directly onto the screen, it takes time and the human eye can actually notice flashes of lag as each pixel on the screen is drawn one at a time. Instead, we are going to draw images OFF the screen, then simply move the image on screen as needed.
-    /*
+
     image = createImage(GAME_WIDTH, GAME_HEIGHT); //draw off screen
     graphics = image.getGraphics();
     draw(graphics);//update the positions of everything on the screen
+    g2d.drawImage(test, 0, 0,null);
 
-     */
-    g.drawImage(image, 0, 0, this); //move the image on the screen
+    //g.drawImage(image, 0, 0, this); //move the image on the screen
 
   }
 
-
-  public void sleep(int x)
-  {
-    try {
-      Thread.sleep(x);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
-  }
 
   //call the draw methods in each class to update positions as things move
   public void draw(Graphics g) {
@@ -391,29 +396,32 @@ public class GamePanel extends JPanel implements Runnable{
       lastTime = now;
 
       //only move objects around and update screen if enough time has passed
-      if(delta >= 1){
+      if (delta >= 1) {
+        spawnVeg(1, veg1);
 
 
-
+        /*
         setSeed();
         difficultyLevel();
-        System.out.println(difficulty);
-        if(difficulty==1) spawnVeg(veg1.spawnSeed, veg1);
+        if(difficulty==1)
+          spawnVeg(veg1.spawnSeed, veg1);
         if(difficulty==2)
         {
-        spawnVeg(3, veg1);
-        spawnVeg(2, veg2);
+        spawnVeg(veg1.spawnSeed, veg1);
+        spawnVeg(veg2.spawnSeed, veg2);
         spawnBomb(1, bomb1);
         }
         if(difficulty==3)
         {
-          spawnVeg(3, veg1);
-          spawnVeg(2, veg2);
+          spawnVeg(veg1.spawnSeed, veg1);
+          spawnVeg(veg2.spawnSeed, veg2);
           spawnBomb(1, bomb1);
         }
-
+        System.out.println(lives);
 
         //System.out.println(bomb1.stepX);
+
+         */
 
 
         checkCollision();
