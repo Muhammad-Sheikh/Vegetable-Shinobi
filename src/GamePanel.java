@@ -10,8 +10,7 @@ Implements Runnable interface to use "threading" - let the game do two things at
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
 import javax.swing.*;
 
@@ -22,21 +21,22 @@ public class GamePanel extends JPanel implements Runnable{
   public static final int GAME_HEIGHT = 600;
   public static int startX = 0, MouseY = 0, MouseX = 0;
 
-  public static int lives = 5, score = 1, combo = 1, difficulty = 0;
+  public static int lives = 5, score = 1, combo = 1, difficulty = 3;
 
   public Thread gameThread;
   public Image image;
   public Graphics graphics;
   public Vegetables veg1, veg2, veg3, veg4 ,veg5;
+  public Bomb bomb1;
   Point mousePoint;
-  List<Integer> seedList = new ArrayList<>();
+
+  HashMap<Integer, Boolean> seedStatus = new HashMap<Integer, Boolean>();
 
 
 
 
   public GamePanel(){
-
-
+    bomb1 = new Bomb(GAME_WIDTH/2, GAME_HEIGHT/2);
     veg1 = new Vegetables(GAME_WIDTH/2, GAME_HEIGHT/2);
     veg2 = new Vegetables(GAME_WIDTH/2, GAME_HEIGHT/2);
     veg3 = new Vegetables(GAME_WIDTH/2, GAME_HEIGHT/2);
@@ -59,6 +59,14 @@ public class GamePanel extends JPanel implements Runnable{
             tempVeg.mouseIntersects = false;
           }
         }
+
+        if(bomb1.contains(mousePoint))
+        {
+          bomb1.mouseIntersects = true;
+        } else
+        {
+          bomb1.mouseIntersects = false;
+        }
       }
     });
 
@@ -72,6 +80,7 @@ public class GamePanel extends JPanel implements Runnable{
     //make this class run at the same time as other classes (without this each class would "pause" while another class runs). By using threading we can remove lag, and also allows us to do features like display timers in real time!
     gameThread = new Thread(this);
     gameThread.start();
+
   }
 
 
@@ -100,6 +109,7 @@ public class GamePanel extends JPanel implements Runnable{
 
   //call the draw methods in each class to update positions as things move
   public void draw(Graphics g) {
+    bomb1.draw(g);
     Vegetables[] Diff1vegetables = {veg1};
     Vegetables[] Diff2vegetables = {veg1, veg2, veg3};
     Vegetables[] Diff3vegetables = {veg1, veg2, veg3, veg4, veg5};
@@ -116,24 +126,27 @@ public class GamePanel extends JPanel implements Runnable{
       for (Vegetables tempVeg : Diff2vegetables) {
         tempVeg.draw(g);
       }
+      //if(bomb1.onScreen)
+      {
+        bomb1.draw(g);
+      }
+
     }
 
     if (difficulty == 3) {
       for (Vegetables tempVeg : Diff3vegetables) {
         tempVeg.draw(g);
       }
+      //if(bomb1.onScreen)
+      {
+        bomb1.draw(g);
+      }
+      System.out.println("sww2");
+
     }
-  }
-
-  public void calculateCombo()
-  {
-
-      sleep(2000);
-      combo = combo + 1;
-
-
 
   }
+
 
   //call the move methods in other classes to update positions
   //this method is constantly called from run(). By doing this, movements appear fluid and natural. If we take this out the movements appear sluggish and laggy
@@ -142,17 +155,24 @@ public class GamePanel extends JPanel implements Runnable{
   //handles all collision detection and responds accordingly
   public void checkCollision(){
 
-    Vegetables[] vegetables = {veg1, veg2, veg3, veg4, veg5};
+    Vegetables[] vegetables = {veg1,veg2,veg3,veg4,veg5};
   for(Vegetables tempVeg : vegetables)
   {
-    if(tempVeg.y<= 0){
+    if(tempVeg.y <= 0){
       tempVeg.y = 0;
     }
     if(tempVeg.y >= GAME_HEIGHT - Vegetables.VEG_DIAMETER){
-      tempVeg.y = GAME_HEIGHT-Vegetables.VEG_DIAMETER;
+      tempVeg.y = GAME_HEIGHT - Vegetables.VEG_DIAMETER;
     }
 
   }
+
+    if(bomb1.y <= 0){
+      bomb1.y = 0;
+    }
+    if(bomb1.y >= GAME_HEIGHT - Bomb.BOMB_DIAMETER){
+      bomb1.y = GAME_HEIGHT - Bomb.BOMB_DIAMETER;
+    }
 
   }
 
@@ -212,9 +232,21 @@ public class GamePanel extends JPanel implements Runnable{
   public void removeVeg(Vegetables cutVeg)
   {
     cutVeg.hasBeenCut = true;
-    score = score + 100;
+    combo = combo + 1;
+    if(combo >= 10) combo = 10;
+    score = score + (100*combo);
     resetVeg(cutVeg);
   }
+
+
+  public void bombTrigger(Bomb bomb)
+  {
+    bomb.hasBeenCut = true;
+    lives = lives -1;
+    combo = 0;
+    resetBomb(bomb);
+  }
+
   public double getA(int spawnSeed)
   {
     double[] tempArray = getQuadratic(spawnSeed);
@@ -260,10 +292,22 @@ public class GamePanel extends JPanel implements Runnable{
     }
   }
 
+  public void spawnBomb(int spawnSeed, Bomb bomb)
+  {
+    if(bomb.mouseIntersects)
+    {
+      bombTrigger(bomb);
+    } else if (!bomb.hasBeenCut)
+    {
+      getStartX(spawnSeed);
+      bomb.updateStep();
+      bomb.move(getEndX(spawnSeed), getA(spawnSeed), getH(spawnSeed), getM(spawnSeed));
+      bombEdge(bomb);
+    }
+  }
+
   public void resetVeg(Vegetables veg)
   {
-
-
     veg.stepX = 0;
     veg.spawnCounter = 0;
     veg.mouseIntersects = false;
@@ -272,25 +316,64 @@ public class GamePanel extends JPanel implements Runnable{
     veg.seedSet = false;
   }
 
+  public void resetBomb(Bomb bomb)
+  {
+    bomb.stepX = 0;
+    bomb.spawnCounter = 0;
+    bomb.mouseIntersects = false;
+    bomb.hasBeenCut = false;
+    bomb.startXSet = false;
+    bomb.seedSet = false;
+  }
+
  public void notBeenCut(Vegetables veg)
  {
    if(veg.y == GAME_HEIGHT - 20){
+     System.out.println("offscreen1");
      veg.checkDeduction();
    }
  }
 
+  public void bombEdge(Bomb bomb)
+  {
+    if(bomb.y >= GAME_HEIGHT - 20){
+      if(bomb.checkDeduction())
+      {
+        resetBomb(bomb);
+      }
+    }
+  }
+
+
+
  public void diffcultyLevel() {
-   if (score >= 1 && score <= 100) {
+   if (score >= 1 && score <= 1000) {
      difficulty = 1;
-   } else if (score > 100 && score <= 200) {
+   } else if (score > 1000 && score <= 2500) {
      difficulty = 2;
-   } else if (score > 200 && score <= 300) {
+   } else if (score > 2500 && score <= 3000) {
      difficulty = 3;
    }
  }
 
+  Random random = new Random();
 
 
+  public void setSeed()
+  {
+    if(random.nextBoolean()) veg1.setSeed(1);
+    else veg1.setSeed(2);
+
+    if(random.nextBoolean()) veg2.setSeed(2);
+    else veg2.setSeed(3);
+
+    if(random.nextBoolean()) veg3.setSeed(4);
+    else veg3.setSeed(5);
+
+
+
+
+  }
 
 
   //run() method is what makes the game continue running without end. It calls other methods to move objects,  check for collision, and update the screen
@@ -309,53 +392,25 @@ public class GamePanel extends JPanel implements Runnable{
 
       //only move objects around and update screen if enough time has passed
       if(delta >= 1){
-        int test[] = {1, 2, 3, 4, 5};
 
+        spawnBomb(5, bomb1);
 
         /*
-        for(int i =1;i<7;i++)
-        {
-          seedList.add(i);
-        }
-        Vegetables[] vegetables = {veg1, veg2, veg3, veg4, veg5};
-        for(Vegetables tempVeg : vegetables)
-        {
-
-          Collections.shuffle(seedList);
-          tempVeg.setSeed(seedList.get(0));
-          seedList.remove(seedList.get(0));
-        }
-        seedList.clear();
+        setSeed();
         diffcultyLevel();
-         */
-        veg1.spawnSeed = 1;
-        veg2.spawnSeed = 2;
-        veg3.spawnSeed = 3;
-        veg4.spawnSeed = 4;
-        veg5.spawnSeed = 5;
-
-        difficulty = 1;
-        switch (difficulty){
-          case (1):
-            spawnVeg(veg1.spawnSeed, veg1);
-          case (2):
-            spawnVeg(veg1.spawnSeed, veg1);
-            spawnVeg(veg2.spawnSeed, veg2);
-            spawnVeg(veg3.spawnSeed, veg3);
-          case (3):
-            spawnVeg(veg1.spawnSeed, veg1);
-            spawnVeg(veg2.spawnSeed, veg2);
-            spawnVeg(veg3.spawnSeed, veg3);
-            spawnVeg(veg4.spawnSeed, veg4);
-            spawnVeg(veg5.spawnSeed, veg5);
-
+        if(difficulty==1) spawnVeg(veg1.spawnSeed, veg1);
+        if(difficulty==2) {spawnVeg(veg1.spawnSeed, veg1);
+        spawnVeg(veg2.spawnSeed, veg2);
+          spawnBomb(6, bomb1);}
+        if(difficulty==3) {
+          spawnVeg(veg1.spawnSeed, veg1);
+          spawnVeg(veg2.spawnSeed, veg2);
+          spawnBomb(5, bomb1);
 
         }
 
-
-
-
-
+         */
+        //System.out.println(bomb1.stepX);
 
 
         checkCollision();

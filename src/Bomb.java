@@ -9,17 +9,17 @@ import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.QuadCurve2D;
 
-public class Vegetables extends Rectangle{
+public class Bomb extends Rectangle{
 
     int stepX = 0, spawnSeed;
 
     int  spawnCounter = 0;
-    boolean mouseIntersects = false, hasBeenCut = false, startXSet = false, seedSet = false;
-    public static final int VEG_DIAMETER = 20; //size of ball
+    boolean mouseIntersects = false, hasBeenCut = false, startXSet = false, seedSet = false,resetBomb = false;
+    public static final int BOMB_DIAMETER = 20; //size of ball
 
     //constructor creates ball at given location with given dimensions
-    public Vegetables(int x, int y){
-        super(x, y, VEG_DIAMETER, VEG_DIAMETER);
+    public Bomb(int x, int y){
+        super(x, y, BOMB_DIAMETER, BOMB_DIAMETER);
     }
 
 
@@ -31,6 +31,12 @@ public class Vegetables extends Rectangle{
         }
     }
 
+    public boolean checkDeduction() {
+        spawnCounter++;
+        if(spawnCounter == 6) return true;
+        else return false;
+    }
+
     public void setSeed(int seed) {
         if(!seedSet)
         {
@@ -38,14 +44,6 @@ public class Vegetables extends Rectangle{
             seedSet = true;
         }
     }
-
-
-    public void checkDeduction() {
-        spawnCounter++;
-        if(spawnCounter == 2) GamePanel.lives = GamePanel.lives - 1;
-    }
-
-
 
 
 
@@ -76,8 +74,8 @@ public class Vegetables extends Rectangle{
     //called frequently from the GamePanel class
     //draws the current location of the ball to the screen
     public void draw(Graphics g){
-        g.setColor(Color.black);
-        g.fillRect(x, y, VEG_DIAMETER, VEG_DIAMETER);
+        g.setColor(Color.red);
+        g.fillRect(x, y, BOMB_DIAMETER, BOMB_DIAMETER);
     }
 
 }
