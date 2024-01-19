@@ -31,7 +31,7 @@ public class Bomb extends Rectangle{
         }
     }
 
-    public boolean checkDeduction() {
+    public boolean checkBombFloor() {
         spawnCounter++;
         if(spawnCounter == 6) return true;
         else return false;

@@ -11,7 +11,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
-import java.util.List;
 import javax.swing.*;
 
 public class GamePanel extends JPanel implements Runnable{
@@ -19,9 +18,8 @@ public class GamePanel extends JPanel implements Runnable{
   //dimensions of window
   public static final int GAME_WIDTH = 1024;
   public static final int GAME_HEIGHT = 600;
-  public static int startX = 0, MouseY = 0, MouseX = 0;
 
-  public static int lives = 5, score = 1, combo = 1, difficulty = 3;
+  public static int lives = 5, score = 1, combo = 1, difficulty = 0, startX = 0;
 
   public Thread gameThread;
   public Image image;
@@ -29,8 +27,6 @@ public class GamePanel extends JPanel implements Runnable{
   public Vegetables veg1, veg2, veg3, veg4 ,veg5;
   public Bomb bomb1;
   Point mousePoint;
-
-  HashMap<Integer, Boolean> seedStatus = new HashMap<Integer, Boolean>();
 
 
 
@@ -83,16 +79,24 @@ public class GamePanel extends JPanel implements Runnable{
 
   }
 
-
+  private void loadImage(String imagePath) {
+    ImageIcon icon = new ImageIcon(imagePath);
+    image = icon.getImage();
+  }
 
 
 
     //paint is a method in java.awt library that we are overriding. It is a special method - it is called automatically in the background in order to update what appears in the window. You NEVER call paint() yourself
   public void paint(Graphics g){
+    loadImage("//2.png");
+    super.paintComponent(g);
     //we are using "double buffering here" - if we draw images directly onto the screen, it takes time and the human eye can actually notice flashes of lag as each pixel on the screen is drawn one at a time. Instead, we are going to draw images OFF the screen, then simply move the image on screen as needed.
+    /*
     image = createImage(GAME_WIDTH, GAME_HEIGHT); //draw off screen
     graphics = image.getGraphics();
     draw(graphics);//update the positions of everything on the screen
+
+     */
     g.drawImage(image, 0, 0, this); //move the image on the screen
 
   }
@@ -109,13 +113,12 @@ public class GamePanel extends JPanel implements Runnable{
 
   //call the draw methods in each class to update positions as things move
   public void draw(Graphics g) {
-    bomb1.draw(g);
     Vegetables[] Diff1vegetables = {veg1};
     Vegetables[] Diff2vegetables = {veg1, veg2, veg3};
     Vegetables[] Diff3vegetables = {veg1, veg2, veg3, veg4, veg5};
 
     g.setColor(Color.white);
-    diffcultyLevel();
+    difficultyLevel();
     if (difficulty == 1) {
       for (Vegetables tempVeg : Diff1vegetables) {
         tempVeg.draw(g);
@@ -126,7 +129,7 @@ public class GamePanel extends JPanel implements Runnable{
       for (Vegetables tempVeg : Diff2vegetables) {
         tempVeg.draw(g);
       }
-      //if(bomb1.onScreen)
+      if(!bomb1.hasBeenCut)
       {
         bomb1.draw(g);
       }
@@ -137,12 +140,10 @@ public class GamePanel extends JPanel implements Runnable{
       for (Vegetables tempVeg : Diff3vegetables) {
         tempVeg.draw(g);
       }
-      //if(bomb1.onScreen)
+      if(!bomb1.hasBeenCut)
       {
         bomb1.draw(g);
       }
-      System.out.println("sww2");
-
     }
 
   }
@@ -329,7 +330,6 @@ public class GamePanel extends JPanel implements Runnable{
  public void notBeenCut(Vegetables veg)
  {
    if(veg.y == GAME_HEIGHT - 20){
-     System.out.println("offscreen1");
      veg.checkDeduction();
    }
  }
@@ -337,7 +337,7 @@ public class GamePanel extends JPanel implements Runnable{
   public void bombEdge(Bomb bomb)
   {
     if(bomb.y >= GAME_HEIGHT - 20){
-      if(bomb.checkDeduction())
+      if(bomb.checkBombFloor())
       {
         resetBomb(bomb);
       }
@@ -346,7 +346,7 @@ public class GamePanel extends JPanel implements Runnable{
 
 
 
- public void diffcultyLevel() {
+ public void difficultyLevel() {
    if (score >= 1 && score <= 1000) {
      difficulty = 1;
    } else if (score > 1000 && score <= 2500) {
@@ -393,23 +393,26 @@ public class GamePanel extends JPanel implements Runnable{
       //only move objects around and update screen if enough time has passed
       if(delta >= 1){
 
-        spawnBomb(5, bomb1);
 
-        /*
+
         setSeed();
-        diffcultyLevel();
+        difficultyLevel();
+        System.out.println(difficulty);
         if(difficulty==1) spawnVeg(veg1.spawnSeed, veg1);
-        if(difficulty==2) {spawnVeg(veg1.spawnSeed, veg1);
-        spawnVeg(veg2.spawnSeed, veg2);
-          spawnBomb(6, bomb1);}
-        if(difficulty==3) {
-          spawnVeg(veg1.spawnSeed, veg1);
-          spawnVeg(veg2.spawnSeed, veg2);
-          spawnBomb(5, bomb1);
-
+        if(difficulty==2)
+        {
+        spawnVeg(3, veg1);
+        spawnVeg(2, veg2);
+        spawnBomb(1, bomb1);
+        }
+        if(difficulty==3)
+        {
+          spawnVeg(3, veg1);
+          spawnVeg(2, veg2);
+          spawnBomb(1, bomb1);
         }
 
-         */
+
         //System.out.println(bomb1.stepX);
 
 

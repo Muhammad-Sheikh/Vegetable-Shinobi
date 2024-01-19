@@ -4,6 +4,7 @@ child of Rectangle because that makes it easy to draw and check for collision
 
 In 2D GUI, basically everything is a rectangle even if it doesn't look like it!
 */
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
@@ -23,6 +24,7 @@ public class Vegetables extends Rectangle{
     }
 
 
+
     public void updateStep() {
         if(!startXSet)
         {
@@ -38,6 +40,8 @@ public class Vegetables extends Rectangle{
             seedSet = true;
         }
     }
+
+
 
 
     public void checkDeduction() {
