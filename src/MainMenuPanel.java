@@ -4,6 +4,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class MainMenuPanel extends JPanel {
+    GameFrame panelCaller = new GameFrame();
+
     public  static  int GAME_WIDTH =600, GAME_HEIGHT = 300;
     public MainMenuPanel()
     {
@@ -23,16 +25,22 @@ public class MainMenuPanel extends JPanel {
         playButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                GameFrame.gamePanel = true;
-                setVisible(false);
+                JComponent comp = (JComponent) e.getSource();
+                Window win = SwingUtilities.getWindowAncestor(comp);
+                win.dispose();
+                panelCaller.openGamePanel();
             }
         });
+
+
 
         helpButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                GameFrame.helpPanel = true;
-                setVisible(false);
+                JComponent comp = (JComponent) e.getSource();
+                Window win = SwingUtilities.getWindowAncestor(comp);
+                win.dispose();
+                panelCaller.openHelpPanel();
             }
         });
 

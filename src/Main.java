@@ -6,8 +6,9 @@ This is a common technique among coders to keep things organized (and handy when
 
 class Main {
   public static void main(String[] args) {
+    GameFrame panelCaller = new GameFrame();
+    panelCaller.openMainMenu();
 
-    new GameFrame();
     
   }
 }

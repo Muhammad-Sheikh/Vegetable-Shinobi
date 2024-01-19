@@ -11,11 +11,10 @@ import java.awt.geom.QuadCurve2D;
 
 public class Vegetables extends Rectangle{
 
-    int stepX = 0;
-    static volatile boolean isInitialized = false;
+    int stepX = 0, spawnSeed;
 
-    int callCount = 0;
-    boolean mouseIntersects = false;
+    int  spawnCounter = 0;
+    boolean mouseIntersects = false, hasBeenCut = false, startXSet = false, seedSet = false;
     public static final int VEG_DIAMETER = 20; //size of ball
 
     //constructor creates ball at given location with given dimensions
@@ -23,23 +22,33 @@ public class Vegetables extends Rectangle{
         super(x, y, VEG_DIAMETER, VEG_DIAMETER);
     }
 
-    //Makes the x speed factor negative
 
-    private void initializationLogic() {
-        callCount++;
+    public void updateStep() {
+        if(!startXSet)
+        {
+            stepX = GamePanel.startX;
+            startXSet = true;
+        }
     }
 
-    synchronized void updateStep() {
-        if (!isInitialized) {
-            initializationLogic();
-            isInitialized = true;
-            stepX = GamePanel.startX;
+    public void setSeed(int seed) {
+        if(!seedSet)
+        {
+            spawnSeed = seed;
+            seedSet = true;
         }
     }
 
 
+    public void checkDeduction() {
+        spawnCounter++;
+        if(spawnCounter == 2) GamePanel.lives = GamePanel.lives - 1;
+    }
 
-    
+
+
+
+
     //called whenever the movement of the ball changes in the y-direction (up/down)
 
     //called whenever the movement of the ball changes in the x-direction (left/right)
@@ -47,21 +56,16 @@ public class Vegetables extends Rectangle{
     //called frequently from both PlayerBall class and GamePanel class
     //updates the current location of the ball
 
-    public void move(double endX, double a, double h, double m){
+    public void move(int endX, double a, double h, double m){
         double xMidPoint;
         double yMidPoint;
-        stepX = stepX +1;
-        if(stepX >= endX)
-        {
-            System.out.println("glsa");
-            stepX = (int) endX;
-        }
-        yMidPoint = (a*(Math.pow((stepX-h), 2))+m);
+        stepX++;
+        if(stepX >= endX) stepX = endX;
+        yMidPoint = (a*(Math.pow((stepX-h), 2))+m) - 20;
         xMidPoint = stepX;
 
-
         x = (int) xMidPoint;
-        y = (int) yMidPoint;
+        y = (int) yMidPoint + 20;
         try {
             Thread.sleep(1);
         } catch (InterruptedException e) {

@@ -1,8 +1,11 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class HelpPanel extends JPanel {
     public  static  int GAME_WIDTH = 600, GAME_HEIGHT = 300;
+    GameFrame panelCaller = new GameFrame();
 
     public HelpPanel()
     {
@@ -13,6 +16,20 @@ public class HelpPanel extends JPanel {
         JLabel label1 = new JLabel("Hello!");
         JLabel label2 = new JLabel("Salut!");
         JLabel label3 = new JLabel("Bruh City 32");
+        JButton playButton = new JButton("Play Game");
+
+
+        playButton.setPreferredSize(new Dimension(150, 50));
+
+        playButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JComponent comp = (JComponent) e.getSource();
+                Window win = SwingUtilities.getWindowAncestor(comp);
+                win.dispose();
+                panelCaller.openGamePanel();
+            }
+        });
 
         label1.setAlignmentX(Component.CENTER_ALIGNMENT);
         add(label1);
@@ -26,6 +43,11 @@ public class HelpPanel extends JPanel {
 
         label3.setAlignmentX(Component.CENTER_ALIGNMENT);
         add(label3);
+
+        add(Box.createVerticalStrut(10));
+
+        playButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        add(playButton);
 
 
     }

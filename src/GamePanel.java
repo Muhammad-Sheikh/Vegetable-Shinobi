@@ -10,6 +10,9 @@ Implements Runnable interface to use "threading" - let the game do two things at
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import javax.swing.*;
 
 public class GamePanel extends JPanel implements Runnable{
@@ -19,15 +22,15 @@ public class GamePanel extends JPanel implements Runnable{
   public static final int GAME_HEIGHT = 600;
   public static int startX = 0, MouseY = 0, MouseX = 0;
 
-  public int lives = 3;
+  public static int lives = 5, score = 1, combo = 1, difficulty = 0;
 
   public Thread gameThread;
   public Image image;
   public Graphics graphics;
   public Vegetables veg1, veg2, veg3, veg4 ,veg5;
   Point mousePoint;
+  List<Integer> seedList = new ArrayList<>();
 
-  Vegetables[] vegetableList = {veg1, veg2};
 
 
 
@@ -73,6 +76,8 @@ public class GamePanel extends JPanel implements Runnable{
 
 
 
+
+
     //paint is a method in java.awt library that we are overriding. It is a special method - it is called automatically in the background in order to update what appears in the window. You NEVER call paint() yourself
   public void paint(Graphics g){
     //we are using "double buffering here" - if we draw images directly onto the screen, it takes time and the human eye can actually notice flashes of lag as each pixel on the screen is drawn one at a time. Instead, we are going to draw images OFF the screen, then simply move the image on screen as needed.
@@ -80,6 +85,7 @@ public class GamePanel extends JPanel implements Runnable{
     graphics = image.getGraphics();
     draw(graphics);//update the positions of everything on the screen
     g.drawImage(image, 0, 0, this); //move the image on the screen
+
   }
 
 
@@ -93,10 +99,39 @@ public class GamePanel extends JPanel implements Runnable{
   }
 
   //call the draw methods in each class to update positions as things move
-  public void draw(Graphics g){
+  public void draw(Graphics g) {
+    Vegetables[] Diff1vegetables = {veg1};
+    Vegetables[] Diff2vegetables = {veg1, veg2, veg3};
+    Vegetables[] Diff3vegetables = {veg1, veg2, veg3, veg4, veg5};
+
     g.setColor(Color.white);
-    veg1.draw(g);
-    veg2.draw(g);
+    diffcultyLevel();
+    if (difficulty == 1) {
+      for (Vegetables tempVeg : Diff1vegetables) {
+        tempVeg.draw(g);
+      }
+    }
+
+    if (difficulty == 2) {
+      for (Vegetables tempVeg : Diff2vegetables) {
+        tempVeg.draw(g);
+      }
+    }
+
+    if (difficulty == 3) {
+      for (Vegetables tempVeg : Diff3vegetables) {
+        tempVeg.draw(g);
+      }
+    }
+  }
+
+  public void calculateCombo()
+  {
+
+      sleep(2000);
+      combo = combo + 1;
+
+
 
   }
 
@@ -106,28 +141,17 @@ public class GamePanel extends JPanel implements Runnable{
 
   //handles all collision detection and responds accordingly
   public void checkCollision(){
-  Vegetables[] vegList = {veg1, veg2};
-  for(Vegetables tempVeg : vegList)
+
+    Vegetables[] vegetables = {veg1, veg2, veg3, veg4, veg5};
+  for(Vegetables tempVeg : vegetables)
   {
     if(tempVeg.y<= 0){
       tempVeg.y = 0;
-      lives = lives -1;
+    }
+    if(tempVeg.y >= GAME_HEIGHT - Vegetables.VEG_DIAMETER){
+      tempVeg.y = GAME_HEIGHT-Vegetables.VEG_DIAMETER;
+    }
 
-    }
-    if(tempVeg.y >= GAME_HEIGHT - tempVeg.VEG_DIAMETER){
-      lives = lives -1;
-      tempVeg.y = GAME_HEIGHT-tempVeg.VEG_DIAMETER;
-    }
-    if(tempVeg.x <= 0){
-      tempVeg.x = 0;
-      lives = lives -1;
-
-    }
-    if(tempVeg.x + tempVeg.VEG_DIAMETER >= GAME_WIDTH){
-      tempVeg.x = GAME_WIDTH-tempVeg.VEG_DIAMETER;
-      lives = lives -1;
-
-    }
   }
 
   }
@@ -135,7 +159,7 @@ public class GamePanel extends JPanel implements Runnable{
 
   public double[] getQuadratic(int spawnSeed){
   double[] quadraticFactor = {0, 0, 0, 0, 0};
-  //A H M
+  //A H M endx startx
 
 
   switch (spawnSeed){
@@ -144,7 +168,7 @@ public class GamePanel extends JPanel implements Runnable{
       quadraticFactor[1] = 500;
       quadraticFactor[2] = 0;
       quadraticFactor[3] = 744;
-      quadraticFactor[4] = 253;
+      quadraticFactor[4] = 255;
       return quadraticFactor;
     case 2:
       quadraticFactor[0] = 0.01;
@@ -164,15 +188,15 @@ public class GamePanel extends JPanel implements Runnable{
       quadraticFactor[0] = 0.01;
       quadraticFactor[1] = 650;
       quadraticFactor[2] = 350;
-      quadraticFactor[3] = 772;
-      quadraticFactor[4] = 744;
+      quadraticFactor[3] = 808;
+      quadraticFactor[4] = 492;
       return quadraticFactor;
     case 5:
       quadraticFactor[0] = 0.01;
       quadraticFactor[1] = 360;
       quadraticFactor[2] = 140;
-      quadraticFactor[3] = 574;
-      quadraticFactor[4] = 491;
+      quadraticFactor[3] = 575;
+      quadraticFactor[4] = 145;
       return quadraticFactor;
     case 6:
       quadraticFactor[0] = 0.01;
@@ -182,15 +206,14 @@ public class GamePanel extends JPanel implements Runnable{
       quadraticFactor[4] = 411;
       return quadraticFactor;
   }
-
-
     return null;
   }
 
   public void removeVeg(Vegetables cutVeg)
   {
-    hasBeenCut = true;
-    System.out.println("cut!");
+    cutVeg.hasBeenCut = true;
+    score = score + 100;
+    resetVeg(cutVeg);
   }
   public double getA(int spawnSeed)
   {
@@ -210,32 +233,62 @@ public class GamePanel extends JPanel implements Runnable{
     return tempArray[2];
   }
 
-
-  public void setStartX(int spawnSeed, Vegetables veg)
-  {
-    double[] tempArray = getQuadratic(spawnSeed);
-    startX = (int) tempArray[4];
-    veg.updateStep();
-  }
-
   public int getEndX(int spawnSeed)
   {
     double[] tempArray = getQuadratic(spawnSeed);
     return (int) tempArray[3];
   }
-  boolean hasBeenCut = false;
+
+
+  public void getStartX(int spawnSeed)
+  {
+    double[] tempArray = getQuadratic(spawnSeed);
+    startX = (int) tempArray[4];
+  }
 
   public void spawnVeg(int spawnSeed, Vegetables veg)
   {
     if(veg.mouseIntersects)
     {
       removeVeg(veg);
-    } else if (!hasBeenCut)
+    } else if (!veg.hasBeenCut)
     {
-      setStartX(spawnSeed, veg);
+      getStartX(spawnSeed);
+      veg.updateStep();
       veg.move(getEndX(spawnSeed), getA(spawnSeed), getH(spawnSeed), getM(spawnSeed));
+      notBeenCut(veg);
     }
   }
+
+  public void resetVeg(Vegetables veg)
+  {
+
+
+    veg.stepX = 0;
+    veg.spawnCounter = 0;
+    veg.mouseIntersects = false;
+    veg.hasBeenCut = false;
+    veg.startXSet = false;
+    veg.seedSet = false;
+  }
+
+ public void notBeenCut(Vegetables veg)
+ {
+   if(veg.y == GAME_HEIGHT - 20){
+     veg.checkDeduction();
+   }
+ }
+
+ public void diffcultyLevel() {
+   if (score >= 1 && score <= 100) {
+     difficulty = 1;
+   } else if (score > 100 && score <= 200) {
+     difficulty = 2;
+   } else if (score > 200 && score <= 300) {
+     difficulty = 3;
+   }
+ }
+
 
 
 
@@ -248,7 +301,7 @@ public class GamePanel extends JPanel implements Runnable{
     double ns = 1000000000/amountOfTicks;
     double delta = 0;
     long now;
-
+    int i2 = 0;
     while(true){ //this is the infinite game loop
       now = System.nanoTime();
       delta = delta + (now-lastTime)/ns;
@@ -256,9 +309,55 @@ public class GamePanel extends JPanel implements Runnable{
 
       //only move objects around and update screen if enough time has passed
       if(delta >= 1){
-        //System.out.println("X: " + MouseX + "Y: " + MouseY);
-        spawnVeg(1, veg1);
-        spawnVeg(3, veg2);
+        int test[] = {1, 2, 3, 4, 5};
+
+
+        /*
+        for(int i =1;i<7;i++)
+        {
+          seedList.add(i);
+        }
+        Vegetables[] vegetables = {veg1, veg2, veg3, veg4, veg5};
+        for(Vegetables tempVeg : vegetables)
+        {
+
+          Collections.shuffle(seedList);
+          tempVeg.setSeed(seedList.get(0));
+          seedList.remove(seedList.get(0));
+        }
+        seedList.clear();
+        diffcultyLevel();
+         */
+        veg1.spawnSeed = 1;
+        veg2.spawnSeed = 2;
+        veg3.spawnSeed = 3;
+        veg4.spawnSeed = 4;
+        veg5.spawnSeed = 5;
+
+        difficulty = 1;
+        switch (difficulty){
+          case (1):
+            spawnVeg(veg1.spawnSeed, veg1);
+          case (2):
+            spawnVeg(veg1.spawnSeed, veg1);
+            spawnVeg(veg2.spawnSeed, veg2);
+            spawnVeg(veg3.spawnSeed, veg3);
+          case (3):
+            spawnVeg(veg1.spawnSeed, veg1);
+            spawnVeg(veg2.spawnSeed, veg2);
+            spawnVeg(veg3.spawnSeed, veg3);
+            spawnVeg(veg4.spawnSeed, veg4);
+            spawnVeg(veg5.spawnSeed, veg5);
+
+
+        }
+
+
+
+
+
+
+
         checkCollision();
         repaint();
         delta--;
